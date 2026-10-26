@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Which Pattern Is It?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a lab-notebook stepper. One case at a time, data table beside the questions on wide screens. */
+:root{
+  --bg:#F4F6F8; --surface:#FFFFFF; --sunk:#EEF1F5; --ink:#1C2430; --muted:#556070; --line:#D9DFE6;
+  --magenta:#9D2F7A; --blue:#1E5FA8; --red:#B8282F; --ok:#1C7348; --okbg:#E5F3EB; --bad:#B42318; --badbg:#FCEBE9;
+  --font-display:'Rubik', 'Trebuchet MS', Arial, sans-serif;
+  --font-body:'Nunito Sans', 'Segoe UI', Verdana, sans-serif;
+  --font-data:'JetBrains Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161D; --surface:#19202A; --sunk:#141A22; --ink:#E6EBF1; --muted:#9BA6B4; --line:#2C3542;
+  --magenta:#E383C3; --blue:#7DB0EC; --red:#F07A7F; --ok:#5ACB92; --okbg:#173327; --bad:#F38377; --badbg:#3A1D1B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161D; --surface:#19202A; --sunk:#141A22; --ink:#E6EBF1; --muted:#9BA6B4; --line:#2C3542;
+  --magenta:#E383C3; --blue:#7DB0EC; --red:#F07A7F; --ok:#5ACB92; --okbg:#173327; --bad:#F38377; --badbg:#3A1D1B; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 48px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;line-height:1.15;margin:0}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.masthead{padding-block:32px 8px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.masthead .kicker{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--magenta)}
+.masthead h1{font-size:clamp(32px,5vw,48px);font-weight:700;margin-top:6px}
+.alleles{display:flex;gap:8px;align-items:center}
+.alleles span{width:22px;height:22px;border-radius:50%;border:1px solid var(--line)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px}
+.start{display:grid;grid-template-columns:1.2fr 1fr;gap:32px}
+.start > *{min-width:0}
+.start h2{font-size:26px;margin-bottom:12px}
+.start ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;color:var(--muted)}
+.start ol b{color:var(--ink)}
+.form{display:flex;flex-direction:column;gap:14px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:15px}
+input[type=text],input[type=number],select,textarea{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+input:disabled,select:disabled,textarea:disabled{opacity:.75;cursor:not-allowed}
+textarea{min-height:120px;resize:vertical;line-height:1.5}
+.btn{appearance:none;border:0;border-radius:8px;padding:12px 20px;font-weight:700;cursor:pointer;background:var(--ink);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:14px;color:var(--muted)}
+.err{color:var(--bad);font-weight:600;font-size:15px}
+
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.chip[aria-current="step"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip .st{font-family:var(--font-data);font-size:12px;opacity:.8}
+.who{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;font-size:14px;color:var(--muted)}
+.who b{color:var(--ink)}
+.linkbtn{appearance:none;border:0;background:none;color:var(--blue);font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
+
+.case{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:28px}
+.case-head{grid-column:1/-1;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.t-mag{color:var(--magenta)} .t-blue{color:var(--blue)} .t-red{color:var(--red)} .t-ink{color:var(--muted)}
+.case-head h2{font-size:30px}
+.story{max-width:68ch;color:var(--ink)}
+.side{display:flex;flex-direction:column;gap:16px}
+.data{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.data th{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+.data td{padding:10px;border-bottom:1px solid var(--line)}
+.data td.num{font-family:var(--font-data);text-align:right;font-size:18px}
+.data tr.total td{font-weight:700;border-bottom:0}
+.crit{background:var(--sunk);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--muted)}
+.crit b{color:var(--ink)}
+.crit code{font-family:var(--font-data);color:var(--ink)}
+
+.qs{display:flex;flex-direction:column;gap:18px;min-width:0}
+.q{display:flex;flex-direction:column;gap:8px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.q:last-of-type{border-bottom:0}
+.q-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.q-top h3{font-size:17px;font-weight:600}
+.pts{font-family:var(--font-data);font-size:13px;color:var(--muted);white-space:nowrap}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;background:var(--sunk)}
+.opt input{accent-color:var(--blue)}
+.exp{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.exp label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted)}
+.small-input{max-width:200px}
+.fb{font-size:14px;font-weight:600;padding:6px 10px;border-radius:6px;align-self:flex-start}
+.fb.ok{color:var(--ok);background:var(--okbg)}
+.fb.no{color:var(--bad);background:var(--badbg)}
+.fb .ans{font-weight:400}
+.paste-msg{font-size:13px;color:var(--bad);font-weight:600}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-top:4px}
+.status{font-size:15px;color:var(--muted)}
+.status b{color:var(--ink)}
+
+.report{font-family:var(--font-data);font-size:13px;min-height:320px;white-space:pre;overflow:auto}
+.score-row{display:flex;flex-wrap:wrap;gap:12px}
+.score{flex:1 1 160px;background:var(--sunk);border-radius:10px;padding:14px 16px}
+.score .lbl{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.score .val{font-family:var(--font-display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.missing{margin:0;padding-left:20px;color:var(--muted)}
+.foot{font-size:13px;color:var(--muted);text-align:center}
+.foot a{color:var(--blue)}
+
+@media (max-width:760px){
+  .start,.case{grid-template-columns:1fr}
+  .card{padding:20px}
+}
+@media (prefers-reduced-motion:no-preference){.chip,.btn{transition:background .15s, color .15s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <p class="kicker">BIOL 2153 · Recitation</p>
+      <h1>Which Pattern Is It?</h1>
+    </div>
+    <div class="alleles" aria-hidden="true">
+      <span style="background:var(--red)"></span><span style="background:var(--magenta);opacity:.55"></span><span style="background:var(--surface)"></span>
+    </div>
+  </header>
+
+  <section id="start" class="card start">
+    <div>
+      <h2>Case files: dominance patterns</h2>
+      <ol>
+        <li>Enter your full name. <b>You get your own data set</b>, so your numbers won’t match your classmates’.</li>
+        <li>For each case, decide the <b>inheritance pattern</b> and the <b>expected F2 ratio</b>, work out the expected counts, and compare them with what was observed.</li>
+        <li>You get <b>3 checks per case</b>. Correct on the 1st check earns full points, on the 2nd 75%, on the 3rd 50%. After 3 checks the answers are shown.</li>
+        <li>Written answers must be <b>typed in your own words</b>. Pasting is turned off.</li>
+        <li>Finish the exit ticket, then copy your report into the Moodle recitation assignment.</li>
+      </ol>
+    </div>
+    <div class="form" id="startForm">
+      <label class="f" for="nm">Full name<input type="text" id="nm" autocomplete="name" placeholder="e.g. Jordan Thibodeaux"></label>
+      <p class="err" id="startErr" hidden></p>
+      <button class="btn" type="button" id="openBtn">Open my case files</button>
+      <p class="note">Your progress is saved in this browser. Type your name the same way to come back to it.</p>
+      <p class="note">You’ll need a calculator and scratch paper.</p>
+    </div>
+  </section>
+
+  <section id="work" hidden>
+    <div class="wrap">
+      <div class="who" id="who"></div>
+      <nav class="steps" id="steps" aria-label="Activity sections"></nav>
+      <div class="card" id="panel"></div>
+    </div>
+  </section>
+
+  <section id="instructor" class="card" hidden>
+    <div class="form">
+      <h2 style="font-size:26px">Verify a student report</h2>
+      <p class="note">Paste a full report, including its last line. The page checks that the report wasn’t edited after it was generated. It’s a light tamper check, not a security system.</p>
+      <label class="f" for="verifyIn">Report text<textarea id="verifyIn" class="report" style="min-height:240px"></textarea></label>
+      <div class="bar"><button class="btn" id="verifyBtn" type="button">Verify report</button><a class="linkbtn" href="#">Back to the activity</a></div>
+      <p id="verifyOut" class="fb" hidden></p>
+    </div>
+  </section>
+
+  <p class="foot">BIOL 2153 Principles of Genetics · LSUA · <a href="#check">Instructor: verify a report</a></p>
+</div>
+
+<script>
+(function(){
+"use strict";
+const CRIT={1:3.841,2:5.991,3:7.815};
+const RATIOS={'3:1':[3,1],'1:2:1':[1,2,1],'2:1':[2,1],'1:1':[1,1],'9:3:3:1':[9,3,3,1]};
+const PATTERNS={complete:'Complete dominance',incomplete:'Incomplete dominance',codominance:'Codominance',none:'None of these'};
+const FIT={close:'Yes, close to expected',far:'No, far from expected'};
+const TELL={yes:'Yes',no:'No'};
+const ARRAY_KEYS=['expected','exp31','expBest'];
+const CHOICE={pattern:PATTERNS,fit:FIT,fit31:FIT,fitBest:FIT,tell:TELL};
+const MULT=[1,0.75,0.5];
+
+function probs(k){const r=RATIOS[k];const s=r.reduce((a,b)=>a+b,0);return r.map(x=>x/s);}
+function within(o,p,tol){const n=sum(o);return o.every((x,i)=>Math.abs(x-n*p[i])<=tol*n*p[i]);}
+function sum(a){return a.reduce((x,y)=>x+y,0);}
+function chi(obs,p){const n=sum(obs);return obs.reduce((s,o,i)=>{const e=n*p[i];return s+(o-e)*(o-e)/e;},0);}
+function fnv(str,seed){let h=seed>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function randInt(r,lo,hi){return lo+Math.floor(r()*(hi-lo+1));}
+function sample(r,n,p){const c=p.map(()=>0);for(let i=0;i<n;i++){const x=r();let acc=0;for(let j=0;j<p.length;j++){acc+=p[j];if(x<acc||j===p.length-1){c[j]++;break;}}}return c;}
+function gen(r,range,p,ok){for(let t=0;t<3000;t++){const n=randInt(r,range[0],range[1]);const o=sample(r,n,p);if(ok(o))return o;}const n=range[0];return p.map(x=>Math.round(n*x));}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function words(s){return (s||'').trim().split(/\s+/).filter(Boolean).length;}
+function f2(x){return (Math.round(x*100)/100).toFixed(2);}
+function f1(x){return (Math.round(x*10)/10).toFixed(1);}
+function fpts(x){return (Math.round(x*100)/100).toString();}
+function hex(n){return ('00000000'+n.toString(16)).slice(-8).toUpperCase();}
+function checkCode(body){const norm='BIOL2153|'+body.replace(/\s+/g,' ').trim();return hex(fnv(norm,2166136261)).slice(0,4)+'-'+hex(fnv(norm,0x9747b28c)).slice(0,4);}
+
+const MAIN_ITEMS=[['pattern',5,'Inheritance pattern'],['ratio',5,'Expected F2 phenotype ratio'],['expected',4,'Expected number in each class'],['fit',3,'Do the observed numbers match what you expected?'],['tell',3,'Can you tell every F2 individual’s genotype just by looking at it?']];
+const BONUS_ITEMS=[['exp31',2,'Expected numbers if the ratio were 3 : 1'],['fit31',2,'Do the observed numbers match a 3 : 1 ratio?'],['best',2,'Which ratio do these data fit?'],['expBest',2,'Expected numbers for the ratio you chose'],['fitBest',2,'Do the observed numbers match that ratio?']];
+const HINTS={
+  pattern:'Look again at the heterozygote: in between, both shown side by side, or identical to one parent?',
+  ratio:'Draw the Punnett square for the F1 × F1 cross. How many phenotype classes are there? Does the heterozygote get its own class?',
+  expected:'Expected number = total × that class’s fraction from your Punnett square (for example ¼ of the total). One decimal is fine.',
+  fit:'Compare each observed number with your expected number. Being off by a few is normal chance; within about 15% counts as close.',
+  tell:'If the heterozygote looks just like one of the homozygotes, you can’t tell them apart by looking.',
+  exp31:'Under 3 : 1, expect ¾ of the total to be yellow and ¼ agouti.',
+  fit31:'Compare the agouti numbers. Is the observed number within about 15% of expected, or way off?',
+  best:'Divide the number of yellow mice by the number of agouti. What simple whole-number ratio is that close to?',
+  expBest:'Use the fractions for your new ratio. For 2 : 1, that’s ⅔ and ⅓ of the total.',
+  fitBest:'Compare each observed number with your new expected numbers.'
+};
+const EXIT_PROMPTS=[
+  'From across the yard, a farmer’s erminette chickens look gray, so she says feather color shows incomplete dominance. In 3–4 sentences, explain what evidence would prove her right or wrong, and what F2 ratio she would see in either case.',
+  'A classmate says that because pink × pink snapdragons give some red offspring, the alleles must have “mixed and then separated.” In 3–4 sentences, correct this explanation using the words allele, segregation and dosage.',
+  'A person with sickle-cell trait (HbA HbS) is healthy, yet both hemoglobins show up on a protein gel. In 3–4 sentences, explain how one genotype can be called recessive, incompletely dominant and codominant.'
+];
+
+function buildCases(seed){
+  const r=mulberry32(seed);
+  const p121=probs('1:2:1'),p31=probs('3:1'),p21=probs('2:1');
+  return [
+    {key:'c1',tone:'t-mag',tag:'Case 1 · Plants',title:'Four o’clocks in the greenhouse',
+     story:'A greenhouse crosses true-breeding red-flowered and white-flowered four o’clocks (<i>Mirabilis jalapa</i>). Every F1 plant has evenly pink petals, with no red or white patches. The F1 plants are self-pollinated and the F2 are counted.',
+     classes:['Red','Pink','White'],obs:gen(r,[160,240],p121,o=>within(o,p121,0.12)),pattern:'incomplete',ratio:'1:2:1',
+     prompt:'In 1–2 sentences, explain which evidence told you the pattern.'},
+    {key:'c2',tone:'t-blue',tag:'Case 2 · Poultry',title:'Erminette chickens',
+     story:'A poultry farmer crosses true-breeding black and white chickens. From a distance the F1 birds look gray, but up close every single feather is either completely black or completely white. The F1 birds are mated with each other.',
+     classes:['Black','Erminette (speckled)','White'],obs:gen(r,[120,200],p121,o=>within(o,p121,0.12)),pattern:'codominance',ratio:'1:2:1',
+     prompt:'In 1–2 sentences, explain which evidence told you the pattern.'},
+    {key:'c3',tone:'t-red',tag:'Case 3 · Crops',title:'Red and yellow tomatoes',
+     story:'A breeder crosses a true-breeding red-fruited tomato with a true-breeding yellow-fruited tomato. All F1 plants make red fruit, the same shade as the red parent. The F1 plants are self-pollinated.',
+     classes:['Red fruit','Yellow fruit'],obs:gen(r,[300,450],p31,o=>within(o,p31,0.10)),pattern:'complete',ratio:'3:1',
+     prompt:'In 1–2 sentences, explain which evidence told you the pattern.'},
+    {key:'c4',tone:'t-blue',tag:'Case 4 · Human blood',title:'The MN blood group',
+     story:'A blood bank studies families in which both parents have blood type MN. Lab tests show that type MN people carry both the M antigen and the N antigen on their red blood cells. These are the children’s blood types.',
+     classes:['Type M','Type MN','Type N'],obs:gen(r,[100,160],p121,o=>within(o,p121,0.12)),pattern:'codominance',ratio:'1:2:1',
+     prompt:'In 1–2 sentences, explain which evidence told you the pattern.'},
+    {key:'c5',tone:'t-ink',tag:'Bonus · Mice',title:'Yellow mice never breed true',bonus:true,
+     story:'In the early 1900s, Lucien Cuénot crossed yellow mice with each other. Yellow is dominant to agouti (brown), yet yellow mice never bred true: every yellow × yellow cross produced some agouti pups.',
+     classes:['Yellow','Agouti'],obs:gen(r,[180,260],p21,o=>!within(o,p31,0.30)&&within(o,p21,0.10)),
+     prompt:'Propose a hypothesis (2–3 sentences) that explains the ratio you found. Hint: think about which yellow mice are missing.'}
+  ];
+}
+
+function correctVals(c){
+  const n=sum(c.obs);
+  if(!c.bonus)return {pattern:c.pattern,ratio:c.ratio,expected:probs(c.ratio).map(v=>n*v),fit:'close',tell:c.pattern==='complete'?'no':'yes'};
+  return {exp31:probs('3:1').map(v=>n*v),fit31:'far',best:'2:1',expBest:probs('2:1').map(v=>n*v),fitBest:'close'};
+}
+function filled(k,a){if(ARRAY_KEYS.includes(k))return Array.isArray(a)&&a.length&&a.every(v=>v!==''&&v!=null);return a!==''&&a!=null;}
+function isCorrect(k,a,cv,c){
+  if(ARRAY_KEYS.includes(k))return Array.isArray(a)&&cv[k].every((e,i)=>a[i]!==''&&a[i]!=null&&Math.abs(Number(a[i])-e)<=0.6);
+  return a===cv[k];
+}
+function showVal(k,v,c){
+  if(v==null||v==='')return '—';
+  if(CHOICE[k])return CHOICE[k][v]||v;
+  if(ARRAY_KEYS.includes(k))return v.map((x,i)=>c.classes[i]+' '+(typeof x==='number'?f1(x):x)).join(', ');
+  return String(v);
+}
+
+let CASES=[],state=null,current=0,storeKey='';
+const $=id=>document.getElementById(id);
+
+function blankCase(){return {answers:{},attempts:0,locked:false,correctAt:{},last:{},text:''};}
+function save(){try{localStorage.setItem(storeKey,JSON.stringify(state));}catch(e){}}
+function load(k){try{const s=localStorage.getItem(k);return s?JSON.parse(s):null;}catch(e){return null;}}
+
+function items(c){return c.bonus?BONUS_ITEMS:MAIN_ITEMS;}
+function caseScore(i){const c=CASES[i],s=state.cases[i];return items(c).reduce((t,[k,p])=>t+(s.correctAt[k]?p*MULT[s.correctAt[k]-1]:0),0);}
+function totals(){let m=0;for(let i=0;i<4;i++)m+=caseScore(i);return {main:m,bonus:caseScore(4)};}
+
+function begin(name){
+  const norm=name.trim().replace(/\s+/g,' ');
+  const seed=fnv(norm.toLowerCase(),2166136261);
+  const seedHex=hex(seed);
+  CASES=buildCases(seed);
+  storeKey='wpi-'+seedHex;
+  state=load(storeKey)||{name:norm,seedHex:seedHex,cases:CASES.map(blankCase),exit:'',pasteBlocks:0,submittedAt:null,exitIdx:seed%EXIT_PROMPTS.length};
+  current=0;save();
+  $('start').hidden=true;$('work').hidden=false;
+  render();
+}
+
+function stepList(){
+  const out=CASES.map((c,i)=>{const s=state.cases[i];const st=s.locked?(fpts(caseScore(i))+'/'+(c.bonus?10:20)):(s.attempts?'in progress':'');return {label:c.bonus?'Bonus':'Case '+(i+1),st:st};});
+  out.push({label:'Exit ticket',st:words(state.exit)>=40?'done':''});
+  out.push({label:'Submit',st:state.submittedAt?'ready':''});
+  return out;
+}
+function render(){
+  $('who').innerHTML='<span>Working as <b>'+esc(state.name)+'</b> · data set <span style="font-family:var(--font-data)">'+state.seedHex+'</span></span><button class="linkbtn" type="button" id="switchBtn">Switch student</button>';
+  $('steps').innerHTML=stepList().map((s,i)=>'<button type="button" class="chip" data-step="'+i+'"'+(i===current?' aria-current="step"':'')+'>'+s.label+(s.st?'<span class="st">'+esc(s.st)+'</span>':'')+'</button>').join('');
+  if(current<CASES.length)$('panel').innerHTML=caseHTML(current);
+  else if(current===CASES.length)$('panel').innerHTML=exitHTML();
+  else $('panel').innerHTML=submitHTML();
+  if(current===CASES.length+1){const ta=$('reportOut');if(ta)ta.value=buildReport();}
+}
+
+function radio(ci,k,opts,val,dis){return '<div class="opts" role="radiogroup">'+Object.keys(opts).map(o=>'<label class="opt"><input type="radio" name="c'+ci+'-'+k+'" data-k="'+k+'" value="'+o+'"'+(val===o?' checked':'')+(dis?' disabled':'')+'>'+opts[o]+'</label>').join('')+'</div>';}
+function ratioSel(k,val,dis){return '<select class="small-input" data-k="'+k+'"'+(dis?' disabled':'')+' aria-label="Ratio"><option value="">Choose…</option>'+Object.keys(RATIOS).map(r=>'<option'+(val===r?' selected':'')+'>'+r+'</option>').join('')+'</select>';}
+function numIn(k,val,dis,step){return '<input type="number" inputmode="decimal" step="'+(step||'any')+'" class="small-input" data-k="'+k+'" value="'+esc(val)+'"'+(dis?' disabled':'')+'>';}
+
+function caseHTML(i){
+  const c=CASES[i],s=state.cases[i],cv=correctVals(c),n=sum(c.obs);
+  let h='<div class="case"><div class="case-head"><p class="eyebrow '+c.tone+'">'+c.tag+'</p><h2>'+c.title+'</h2><p class="story">'+c.story+'</p></div>';
+  h+='<div class="side"><table class="data"><thead><tr><th>Phenotype</th><th style="text-align:right">Observed</th></tr></thead><tbody>';
+  c.classes.forEach((cl,j)=>{h+='<tr><td>'+cl+'</td><td class="num">'+c.obs[j]+'</td></tr>';});
+  h+='<tr class="total"><td>Total (n)</td><td class="num">'+n+'</td></tr></tbody></table>';
+  h+='<div class="crit"><b>Getting expected numbers</b><br>Expected = total × fraction<br>1 : 2 : 1 → <code>¼ · ½ · ¼</code><br>3 : 1 → <code>¾ · ¼</code><br>Within about 15% of expected = close</div>';
+  h+='<p class="note">'+(c.bonus?'Bonus case, worth up to 10 extra points.':'Worth 20 points.')+' Checks used: <b>'+s.attempts+' of 3</b>.</p></div>';
+  h+='<div class="qs">';
+  items(c).forEach(([k,pts,label])=>{
+    const dis=s.locked||!!s.correctAt[k];const a=s.answers[k];
+    let field='';
+    if(CHOICE[k])field=radio(i,k,CHOICE[k],a,dis);
+    else if(k==='ratio'||k==='best')field=ratioSel(k,a,dis);
+    else if(ARRAY_KEYS.includes(k)){const arr=Array.isArray(a)?a:[];field='<div class="exp">'+c.classes.map((cl,j)=>'<label>'+cl+'<input type="number" inputmode="decimal" step="any" data-k="'+k+'" data-j="'+j+'" value="'+esc(arr[j]==null?'':arr[j])+'"'+(dis?' disabled':'')+'></label>').join('')+'</div>';}
+    else field=numIn(k,a,dis);
+    let fb='';
+    if(s.correctAt[k])fb='<p class="fb ok">✓ Correct (check '+s.correctAt[k]+')</p>';
+    else if(s.locked)fb='<p class="fb no">✗ Not correct. <span class="ans">Answer: '+esc(showVal(k,cv[k],c))+'</span></p>';
+    else if(s.last[k]===false)fb='<p class="fb no">✗ Not yet. <span class="ans">'+esc(HINTS[k])+'</span></p>';
+    h+='<div class="q"><div class="q-top"><h3>'+label+'</h3><span class="pts">'+pts+' pts</span></div>'+field+fb+'</div>';
+  });
+  h+='<div class="q"><div class="q-top"><h3>'+(c.bonus?'Your hypothesis':'Explain your reasoning')+'</h3><span class="pts">required</span></div><p class="note">'+c.prompt+' Type it yourself; pasting is turned off.</p><textarea class="own" data-k="text" id="txt-'+c.key+'"'+(s.locked?' disabled':'')+'>'+esc(s.text)+'</textarea><p class="paste-msg" hidden>Pasting is turned off. Type your answer in your own words.</p></div>';
+  h+='<div class="bar"><p class="status">'+(s.locked?'Case finished: <b>'+fpts(caseScore(i))+' / '+(c.bonus?10:20)+'</b> points.':'Fill in every answer, then check.')+'</p><div style="display:flex;gap:10px;flex-wrap:wrap">';
+  if(!s.locked)h+='<button class="btn" type="button" id="checkBtn">Check answers ('+(3-s.attempts)+' left)</button>';
+  h+='<button class="btn ghost" type="button" data-step="'+(i+1)+'">Next →</button></div></div><p class="err" id="caseErr" hidden></p>';
+  h+='</div></div>';
+  return h;
+}
+
+function doCheck(){
+  const i=current,c=CASES[i],s=state.cases[i],cv=correctVals(c);
+  const missing=items(c).filter(([k])=>!s.correctAt[k]&&!filled(k,s.answers[k]));
+  const err=$('caseErr');
+  if(missing.length){err.textContent='Answer every question first: '+missing.map(m=>m[2]).join(', ')+'.';err.hidden=false;return;}
+  const need=c.bonus?10:8;
+  if(words(s.text)<need){err.textContent='Write at least '+need+' words in the last box.';err.hidden=false;return;}
+  s.attempts++;s.last={};
+  let all=true;
+  items(c).forEach(([k])=>{if(s.correctAt[k])return;const ok=isCorrect(k,s.answers[k],cv,c);s.last[k]=ok;if(ok)s.correctAt[k]=s.attempts;else all=false;});
+  if(all||s.attempts>=3)s.locked=true;
+  state.submittedAt=null;save();render();
+}
+
+function exitHTML(){
+  const w=words(state.exit);
+  return '<div class="form" style="max-width:760px"><p class="eyebrow t-mag">Exit ticket · 20 pts, graded by your instructor</p><h2 style="font-size:30px">Explain it in your own words</h2><p class="story">'+esc(EXIT_PROMPTS[state.exitIdx])+'</p><textarea class="own" data-k="exit" id="exitTxt" style="min-height:200px">'+esc(state.exit)+'</textarea><p class="paste-msg" hidden>Pasting is turned off. Type your answer in your own words.</p><div class="bar"><p class="status" id="wc">'+w+' words (at least 40)</p><button class="btn ghost" type="button" data-step="'+(CASES.length+1)+'">Go to submit →</button></div></div>';
+}
+
+function readiness(){const m=[];for(let i=0;i<4;i++)if(!state.cases[i].locked)m.push('Finish Case '+(i+1));if(words(state.exit)<40)m.push('Write at least 40 words on the exit ticket');return m;}
+function submitHTML(){
+  const miss=readiness();
+  if(miss.length)return '<div class="form" style="max-width:640px"><p class="eyebrow t-ink">Submit</p><h2 style="font-size:30px">Almost there</h2><p>Before you can generate your report:</p><ul class="missing">'+miss.map(m=>'<li>'+m+'</li>').join('')+'</ul><p class="note">The bonus case is optional.</p></div>';
+  if(!state.submittedAt){state.submittedAt=new Date().toLocaleString();save();}
+  const t=totals();
+  return '<div class="form"><p class="eyebrow t-ink">Submit</p><h2 style="font-size:30px">Your report is ready</h2><div class="score-row"><div class="score"><p class="lbl">Cases 1–4</p><p class="val">'+fpts(t.main)+' / 80</p></div><div class="score"><p class="lbl">Bonus</p><p class="val">'+fpts(t.bonus)+' / 10</p></div><div class="score"><p class="lbl">Exit ticket</p><p class="val">/ 20</p></div></div><p>Copy the whole report and paste it into the <b>Moodle recitation assignment</b>. Don’t edit it: the last line is a check code your instructor uses to confirm it wasn’t changed.</p><textarea class="report" id="reportOut" readonly aria-label="Your report"></textarea><div class="bar"><button class="btn" type="button" id="copyBtn">Copy report</button><p class="status" id="copyMsg"></p></div></div>';
+}
+
+function buildReport(){
+  const L=[],t=totals();
+  L.push('BIOL 2153 Recitation: Which Pattern Is It?');
+  L.push('Student: '+state.name);L.push('Data set: '+state.seedHex);
+  L.push('Report generated: '+state.submittedAt);
+  L.push('Cases 1-4 (auto-graded): '+fpts(t.main)+' / 80');L.push('Bonus: '+fpts(t.bonus)+' / 10');
+  L.push('Exit ticket: graded by instructor (/ 20)');L.push('Blocked paste attempts: '+state.pasteBlocks);L.push('');
+  CASES.forEach((c,i)=>{
+    const s=state.cases[i],cv=correctVals(c);
+    L.push((c.bonus?'BONUS':'CASE '+(i+1))+': '+c.title.replace(/’/g,"'")+' | '+fpts(caseScore(i))+' / '+(c.bonus?10:20)+' | checks used: '+s.attempts);
+    if(!s.attempts){L.push('  Not attempted');L.push('');return;}
+    L.push('  Observed: '+c.classes.map((cl,j)=>cl+' '+c.obs[j]).join(', ')+' (n = '+sum(c.obs)+')');
+    items(c).forEach(([k,,label])=>{
+      const a=s.answers[k];
+      const shown=ARRAY_KEYS.includes(k)&&Array.isArray(a)?a.map((x,j)=>c.classes[j]+' '+x).join(', '):showVal(k,a,c);
+      L.push('  '+label+': '+shown+(s.correctAt[k]?'  [correct, check '+s.correctAt[k]+']':'  [incorrect; answer: '+showVal(k,cv[k],c)+']'));
+    });
+    L.push('  '+(c.bonus?'Hypothesis':'Reasoning')+': '+s.text.trim().replace(/\s+/g,' '));
+    L.push('');
+  });
+  L.push('EXIT TICKET');L.push('Prompt: '+EXIT_PROMPTS[state.exitIdx]);L.push('Answer: '+state.exit.trim().replace(/\s+/g,' '));L.push('');
+  const body=L.join('\n');
+  return body+'\nCheck code: '+checkCode(body);
+}
+
+/* events */
+$('nm').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();openFiles();}});
+$('openBtn').addEventListener('click',openFiles);
+function openFiles(){
+  const n=$('nm').value,err=$('startErr');
+  if(n.trim().split(/\s+/).length<2){err.textContent='Enter your first and last name.';err.hidden=false;return;}
+  err.hidden=true;
+  try{begin(n);}catch(x){err.textContent='Something went wrong opening your case files. Reload the page and try again.';err.hidden=false;}
+}
+document.addEventListener('click',e=>{
+  const st=e.target.closest('[data-step]');
+  if(st){current=Number(st.dataset.step);render();window.scrollTo({top:0});return;}
+  if(e.target.id==='checkBtn'){doCheck();return;}
+  if(e.target.id==='switchBtn'){state=null;$('work').hidden=true;$('start').hidden=false;$('nm').value='';return;}
+  if(e.target.id==='copyBtn'){
+    const ta=$('reportOut'),msg=$('copyMsg');
+    const fallback=()=>{ta.focus();ta.select();msg.textContent='Selected. Press Ctrl+C (or ⌘+C) to copy.';};
+    try{navigator.clipboard.writeText(ta.value).then(()=>{msg.textContent='Copied. Paste it into Moodle.';},fallback);}catch(err){fallback();}
+  }
+});
+function onField(e){
+  if(!state)return;const el=e.target,k=el.dataset&&el.dataset.k;if(!k)return;
+  if(k==='exit'){state.exit=el.value;const wc=$('wc');if(wc)wc.textContent=words(el.value)+' words (at least 40)';state.submittedAt=null;save();return;}
+  if(current>=CASES.length)return;
+  const s=state.cases[current];
+  if(k==='text')s.text=el.value;
+  else if(ARRAY_KEYS.includes(k)){if(!Array.isArray(s.answers[k]))s.answers[k]=CASES[current].classes.map(()=>'');s.answers[k][Number(el.dataset.j)]=el.value;}
+  else s.answers[k]=el.value;
+  save();
+}
+document.addEventListener('input',onField);
+document.addEventListener('change',onField);
+function blockPaste(e){
+  const el=e.target;if(!el.classList||!el.classList.contains('own'))return;
+  e.preventDefault();state.pasteBlocks++;save();
+  const m=el.parentNode.querySelector('.paste-msg');if(m)m.hidden=false;
+}
+document.addEventListener('paste',blockPaste,true);
+document.addEventListener('drop',blockPaste,true);
+
+function route(){
+  const inst=location.hash==='#check';
+  $('instructor').hidden=!inst;
+  if(inst){$('start').hidden=true;$('work').hidden=true;}
+  else if(state){$('work').hidden=false;$('start').hidden=true;}
+  else{$('start').hidden=false;$('work').hidden=true;}
+}
+$('verifyBtn').addEventListener('click',()=>{
+  const txt=$('verifyIn').value.replace(/\r\n/g,'\n'),out=$('verifyOut');
+  const m=txt.match(/\n\s*Check code:\s*([0-9A-F]{4}-[0-9A-F]{4})\s*$/i);
+  out.hidden=false;
+  if(!m){out.className='fb no';out.textContent='No check code found. Paste the entire report, including the last line.';return;}
+  const body=txt.slice(0,m.index);
+  if(checkCode(body)===m[1].toUpperCase()){out.className='fb ok';out.textContent='✓ Check code matches. The report hasn’t been changed since it was generated.';}
+  else{out.className='fb no';out.textContent='✗ Check code doesn’t match. The report was edited after it was generated, or part of it is missing.';}
+});
+window.addEventListener('hashchange',route);
+route();
+})();
+</script>
+
+</body>
+</html>
