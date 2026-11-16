@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Moss Hunt · BIOL 3160</title>
+<meta name="theme-color" content="#3f7d3a">
+<meta name="description" content="BIOL 3160 field survey at LSUA: find, photograph and describe mosses on campus.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Moss Hunt">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>🌿 Campus Moss Hunt</h1>
+  <p>BIOL 3160 · Survey of the Plant Kingdom · LSUA · Ecology field survey</p>
+</header>
+<nav><div class="inner" id="tabs">
+  <button data-tab="add" class="active">＋ Add a moss</button>
+  <button data-tab="results">Live results</button>
+  <button data-tab="gallery">Class gallery</button>
+  <button data-tab="mine">My finds</button>
+  <button data-tab="instructor" class="hidden" id="instrTab">Instructor</button>
+</div></nav>
+<main>
+  <div id="status" class="banner info hidden"></div>
+
+  <!-- ADD -->
+  <section id="tab-add">
+    <div class="card hidden" id="installCard">
+      <h2>📲 Install the app</h2>
+      <p class="muted" id="installText" style="margin:0"></p>
+      <button class="btn" id="installBtn" style="display:none">Add to home screen</button>
+    </div>
+    <div class="card who-card">
+      <h2>Who are you?</h2>
+      <p class="muted">Enter this once. Use your LSUA email so your work is credited to you.</p>
+      <div class="row">
+        <div><label for="sname">Full name</label><input id="sname" autocomplete="name" placeholder="First Last"></div>
+        <div><label for="semail">LSUA email</label><input id="semail" type="email" autocomplete="email" inputmode="email" placeholder="you@lsua.edu"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>My progress</h2>
+      <div id="myProgress" class="muted">Enter your email above to see your progress.</div>
+    </div>
+    <form class="card" id="obsForm" autocomplete="off">
+      <h2>New moss observation</h2>
+      <p class="muted">Find a moss anywhere on campus. Photograph it, identify it with an app, and describe where and how it's growing. One entry per moss.</p>
+
+      <label>Photo of the moss <span class="muted">(required; put a coin next to it for scale)</span></label>
+      <label class="photoPick" id="pick1"><input type="file" accept="image/*" id="photo1"><span>📷 Tap to take or choose a photo</span></label>
+      <label>Close-up photo <span class="muted">(optional: sporophytes, leaves through a hand lens)</span></label>
+      <label class="photoPick" id="pick2"><input type="file" accept="image/*" id="photo2"><span>🔍 Tap to add a close-up</span></label>
+
+      <h3>Identification</h3>
+      <div class="row">
+        <div><label for="species">Species or genus</label><input id="species" placeholder="e.g., Bryum argenteum"></div>
+        <div><label for="common">Common name <span class="muted">(if any)</span></label><input id="common" placeholder="e.g., silvery moss"></div>
+      </div>
+      <label>App used to identify it</label>
+      <div class="seg" data-field="app"><button type="button" data-v="iNaturalist">iNaturalist</button><button type="button" data-v="Seek">Seek</button><button type="button" data-v="PictureThis">PictureThis</button><button type="button" data-v="Google Lens">Google Lens</button><button type="button" data-v="Other">Other</button></div>
+      <label>How confident are you in the ID?</label>
+      <div class="seg" data-field="conf"><button type="button" data-v="high">High</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="low">Low</button></div>
+
+      <h3>Describe the moss</h3>
+      <label>Growth form</label>
+      <div class="seg" data-field="form"><button type="button" data-v="cushion">Upright cushion / tuft</button><button type="button" data-v="mat">Creeping mat</button><button type="button" data-v="unsure">Not sure</button></div>
+      <label>Color</label>
+      <div class="seg" data-field="color"><button type="button" data-v="bright green">Bright green</button><button type="button" data-v="dark green">Dark green</button><button type="button" data-v="yellow-green">Yellow-green</button><button type="button" data-v="pale / whitish">Pale / whitish</button><button type="button" data-v="brown">Brown / dry</button></div>
+      <label>Sporophytes (stalk with a capsule) present?</label>
+      <div class="seg" data-field="sporo"><button type="button" data-v="Y">Yes</button><button type="button" data-v="N">No</button></div>
+      <label for="desc">Describe what you see <span class="muted">(texture, leaf shape, size of the patch…)</span></label>
+      <textarea id="desc"></textarea>
+
+      <h3>Ecology: where is it growing?</h3>
+      <label for="where">Location on campus</label>
+      <input id="where" placeholder="e.g., north wall of the Science building, near the A/C unit">
+      <label>Substrate (what it's growing on)</label>
+      <div class="seg" data-field="substrate"><button type="button" data-v="tree bark">Tree bark</button><button type="button" data-v="soil">Soil</button><button type="button" data-v="concrete / sidewalk">Concrete / sidewalk</button><button type="button" data-v="brick / wall">Brick / wall</button><button type="button" data-v="rock">Rock</button><button type="button" data-v="rotting wood">Rotting wood</button><button type="button" data-v="other">Other</button></div>
+      <label>Light</label>
+      <div class="seg" data-field="light"><button type="button" data-v="full sun">Full sun</button><button type="button" data-v="partial shade">Partial shade</button><button type="button" data-v="full shade">Full shade</button></div>
+      <label>Moisture right now</label>
+      <div class="seg" data-field="moist"><button type="button" data-v="dry">Dry</button><button type="button" data-v="damp">Damp</button><button type="button" data-v="wet">Wet</button></div>
+      <label>Which way does the surface face?</label>
+      <div class="seg" data-field="aspect"><button type="button" data-v="N">N</button><button type="button" data-v="E">E</button><button type="button" data-v="S">S</button><button type="button" data-v="W">W</button><button type="button" data-v="flat">Flat ground</button><button type="button" data-v="unsure">Not sure</button></div>
+      <label for="assoc">Other organisms growing with it <span class="muted">(lichens, liverworts, ferns, algae, insects…)</span></label>
+      <input id="assoc">
+      <label for="why">Why do you think this moss grows here? <span class="muted">(use what you know about bryophytes)</span></label>
+      <textarea id="why"></textarea>
+
+      <button class="btn" type="submit" id="submitBtn">Submit observation</button>
+    </form>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="tab-results" class="hidden">
+    <div class="card">
+      <h2>Live class results</h2>
+      <p class="muted">Updates automatically every few seconds while this page is open.</p>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="charts">
+      <div class="card"><h2>Substrate</h2><div class="chartbox"><canvas id="chSub"></canvas></div></div>
+      <div class="card"><h2>Light</h2><div class="chartbox"><canvas id="chLight"></canvas></div></div>
+      <div class="card"><h2>Moisture</h2><div class="chartbox"><canvas id="chMoist"></canvas></div></div>
+      <div class="card"><h2>Surface facing</h2><div class="chartbox"><canvas id="chAspect"></canvas></div></div>
+      <div class="card"><h2>Growth form</h2><div class="chartbox"><canvas id="chForm"></canvas></div></div>
+      <div class="card"><h2>Sporophytes by moisture</h2><p class="muted" style="margin-top:-6px">% of finds with sporophytes</p><div class="chartbox"><canvas id="chSporo"></canvas></div></div>
+    </div>
+    <div class="card"><h2>Species found</h2><div id="species" class="muted">None yet.</div></div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="tab-gallery" class="hidden">
+    <div class="card">
+      <h2>Class gallery</h2>
+      <div class="filters" id="filters"></div>
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </section>
+
+  <!-- MINE -->
+  <section id="tab-mine" class="hidden">
+    <div class="card">
+      <h2>My finds</h2>
+      <p class="muted">Made a mistake? Delete the entry and submit it again. You can delete entries from the phone you submitted them on.</p>
+      <div class="gallery" id="mineList"></div>
+    </div>
+  </section>
+
+  <!-- INSTRUCTOR -->
+  <section id="tab-instructor" class="hidden">
+    <div class="card" id="keyCard">
+      <h2>Instructor login</h2>
+      <label for="adminKey">Instructor key</label>
+      <input id="adminKey" type="password" autocomplete="off">
+      <button class="btn" id="keyBtn">Open instructor view</button>
+    </div>
+    <div id="instrBody" class="hidden">
+      <div class="card">
+        <h2>Who submitted what</h2>
+        <p class="muted">Complete = at least <b class="target"></b> moss observations. Add names and emails to the <b>Roster</b> tab of your Google Sheet to also see students who haven't submitted.</p>
+        <div class="stats" id="instrStats" style="margin-bottom:12px"></div>
+        <div class="scroll"><table id="personTable"></table></div>
+      </div>
+      <div class="card">
+        <h2>Export</h2>
+        <p class="muted">All the data is also in your Google Sheet (Observations tab), and photos are in the "Moss Hunt Photos" Drive folder.</p>
+        <button class="btn ghost" id="dlCsv">Download CSV</button>
+        <button class="btn ghost" id="instrLogout">Log out</button>
+      </div>
+    </div>
+  </section>
+</main>
+<footer><a href="#" id="instrLink">Instructor</a></footer>
+<div class="toast" id="toast"></div>
+<div class="lightbox hidden" id="lightbox"><button class="btn ghost" style="color:#fff;border-color:#888" id="lbClose">Close ✕</button><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></div>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
