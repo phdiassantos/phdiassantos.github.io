@@ -157,7 +157,7 @@ function allRows_() {
 }
 
 function roster_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = ss_();
   let sh = ss.getSheetByName('Roster');
   if (!sh) { sh = ss.insertSheet('Roster'); sh.appendRow(['name', 'email']); return []; }
   return sh.getDataRange().getValues().slice(1)
@@ -196,8 +196,21 @@ function folder_() {
   return f;
 }
 
+/** The data spreadsheet: the Sheet this script is attached to, or (if the script was
+ *  created on its own at script.google.com) a Sheet called "Moss Hunt Data" in your Drive. */
+function ss_() {
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('SHEET_ID');
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) {} }
+  const created = SpreadsheetApp.create('Moss Hunt Data');
+  props.setProperty('SHEET_ID', created.getId());
+  return created;
+}
+
 function sheet_(name, headers) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = ss_();
   let sh = ss.getSheetByName(name);
   if (!sh) {
     sh = ss.insertSheet(name);
@@ -216,8 +229,14 @@ function json_(obj) {
 
 /** Run this once from the editor (select "setup" > Run) to create the tabs and the Drive folder and approve permissions. */
 function setup() {
+  const ss = ss_();
   sheet_('Observations', HEADERS);
   sheet_('Thumbs', ['id', 'thumb']);
   roster_();
-  folder_();
+  const blank = ss.getSheetByName('Sheet1');
+  if (blank && blank.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(blank);
+  ss.setActiveSheet(ss.getSheetByName('Observations'));
+  const folder = folder_();
+  Logger.log('Data spreadsheet: ' + ss.getUrl());
+  Logger.log('Photo folder: ' + folder.getUrl());
 }
